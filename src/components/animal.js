@@ -552,7 +552,7 @@ function GameSpot({ data, isRevealed, onReveal, isTarget, isLocked }) {
                  initial={{ scale: 0 }} animate={{ scale: 1 }}
                  className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg whitespace-nowrap"
                >
-                 Try again!
+                 حاول ثانية!
                </motion.div>
             )}
          </div>
