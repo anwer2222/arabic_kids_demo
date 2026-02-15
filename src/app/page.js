@@ -1,330 +1,267 @@
-// app/page.js
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-// 3D Imports
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Text, OrbitControls, Float, Stars, RoundedBox } from "@react-three/drei";
-// Animation & Utility Imports
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import {ConnectGame2D, MagicBlocks3D} from "../components/connect"
+import InfiniteCharacterGallery from "../components/charcter"
+import SafariAdventure from "../components/animal"
+import PassportScannerGame from "../components/passport"
 
-// --- UTILS ---
+// ==========================================
+// CONFIGURATION
+// ==========================================
+// 1. The Aspect Ratio of your SVG (Width / Height)
+// 2432 / 1760 = ~1.38
+const VIEWBOX = "0 0 2784 1536"; 
+
+// 2. Your Path Data (Copied exactly from your prompt)
+// const car = "M 1266.00,917.00 C 1266.00,917.00 1337.00,907.00 1337.00,907.00 1337.00,907.00 1382.00,923.00 1382.00,923.00 1382.00,923.00 1404.00,948.00 1404.00,948.00 1404.00,948.00 1417.00,952.00 1417.00,952.00 1417.00,952.00 1435.00,965.00 1435.00,965.00 1435.00,965.00 1439.00,987.00 1439.00,987.00 1439.00,987.00 1443.00,1003.00 1443.00,1003.00 1443.00,1003.00 1425.00,1015.00 1425.00,1015.00 1425.00,1015.00 1414.00,1038.00 1414.00,1038.00 1414.00,1038.00 1393.00,1045.00 1393.00,1045.00 1393.00,1045.00 1328.00,1058.00 1328.00,1058.00 1328.00,1058.00 1241.00,1076.00 1241.00,1076.00 1241.00,1076.00 1208.00,1075.00 1208.00,1075.00 1208.00,1075.00 1179.00,1063.00 1179.00,1063.00 1179.00,1063.00 1162.00,1048.00 1162.00,1048.00 1162.00,1048.00 1159.00,1036.00 1159.00,1036.00 1159.00,1036.00 1175.00,1028.00 1175.00,1028.00 1175.00,1028.00 1174.00,1008.00 1174.00,1008.00 1174.00,1008.00 1181.00,987.00 1181.00,987.00 1181.00,987.00 1192.00,974.00 1192.00,974.00 1192.00,974.00 1239.00,956.00 1239.00,956.00 1239.00,956.00 1266.00,917.00 1266.00,917.00 Z";
+// const book = "M 1572.00,1240.00 C 1572.00,1240.00 1364.00,1120.00 1364.00,1120.00 1364.00,1120.00 1388.00,1094.00 1388.00,1094.00 1388.00,1094.00 1468.00,1060.00 1468.00,1060.00 1468.00,1060.00 1513.33,1048.00 1513.33,1048.00 1513.33,1048.00 1566.67,1050.00 1566.67,1050.00 1566.67,1050.00 1600.67,1023.33 1600.67,1023.33 1600.67,1023.33 1639.33,1012.67 1639.33,1012.67 1639.33,1012.67 1678.67,1008.00 1678.67,1008.00 1678.67,1008.00 1720.00,1006.67 1720.00,1006.67 1720.00,1006.67 1801.33,1037.33 1801.33,1037.33 1801.33,1037.33 1914.67,1084.00 1914.67,1084.00 1914.67,1084.00 1923.33,1093.33 1923.33,1093.33 1923.33,1093.33 1936.67,1098.00 1936.67,1098.00 1936.67,1098.00 1922.67,1111.33 1922.67,1111.33 1922.67,1111.33 1904.67,1117.33 1904.67,1117.33 1904.67,1117.33 1885.33,1126.67 1885.33,1126.67 1885.33,1126.67 1848.00,1140.00 1848.00,1140.00 1848.00,1140.00 1804.00,1156.00 1804.00,1156.00 1804.00,1156.00 1736.00,1181.33 1736.00,1181.33 1736.00,1181.33 1656.00,1210.00 1656.00,1210.00 1656.00,1210.00 1572.00,1240.00 1572.00,1240.00 Z"
+// const box="M 1689.00,982.50 C 1689.00,982.50 1566.00,1028.67 1566.00,1028.67 1566.00,1028.67 1546.67,1020.00 1546.67,1020.00 1546.67,1020.00 1539.00,993.00 1539.00,993.00 1539.00,993.00 1559.33,980.00 1559.33,980.00 1559.33,980.00 1560.67,932.00 1560.67,932.00 1560.67,932.00 1578.00,922.67 1578.00,922.67 1578.00,922.67 1578.00,876.00 1578.00,876.00 1578.00,876.00 1572.00,868.67 1572.00,868.67 1572.00,868.67 1570.67,834.67 1570.67,834.67 1570.67,834.67 1561.33,830.67 1561.33,830.67 1561.33,830.67 1605.33,781.33 1605.33,781.33 1605.33,781.33 1644.00,774.67 1644.00,774.67 1644.00,774.67 1686.00,828.67 1686.00,828.67 1686.00,828.67 1678.67,836.00 1678.67,836.00 1678.67,836.00 1678.67,870.67 1678.67,870.67 1678.67,870.67 1669.33,880.00 1669.33,880.00 1669.33,880.00 1669.33,922.67 1669.33,922.67 1669.33,922.67 1689.33,928.67 1689.33,928.67 1689.33,928.67 1689.00,982.50 1689.00,982.50 Z"
+// const card_box="M 778.50,1104.00 C 778.50,1104.00 720.00,1114.50 720.00,1114.50 720.00,1114.50 537.00,1050.00 537.00,1050.00 537.00,1050.00 634.50,1020.00 634.50,1021.50 634.50,1023.00 636.00,996.00 636.00,996.00 636.00,996.00 580.50,912.00 580.50,912.00 580.50,912.00 595.50,873.00 595.50,873.00 595.50,873.00 804.00,829.50 804.00,829.50 804.00,829.50 861.00,907.50 861.00,907.50 861.00,907.50 853.50,942.00 853.50,942.00 853.50,942.00 970.50,978.00 970.50,978.00 970.50,978.00 972.00,1033.50 972.00,1033.50 972.00,1033.50 778.50,1104.00 778.50,1104.00 Z"
+// const card="M 964.50,1177.50 C 964.50,1177.50 873.00,1144.50 873.00,1144.50 873.00,1144.50 868.50,1135.50 868.50,1135.50 868.50,1135.50 897.00,1119.00 897.00,1119.00 897.00,1119.00 894.00,1089.00 894.00,1089.00 894.00,1089.00 1026.00,1036.50 1026.00,1036.50 1026.00,1036.50 1114.50,1066.50 1114.50,1066.50 1114.50,1066.50 1116.00,1108.50 1116.00,1108.50 1116.00,1108.50 964.50,1177.50 964.50,1177.50 Z"
+const sheet = "M 184.50,1162.50 C 184.50,1162.50 502.50,1362.00 502.50,1362.00 502.50,1362.00 928.50,1083.00 928.50,1083.00 928.50,1083.00 594.00,882.00 594.00,882.00 594.00,882.00 184.50,1162.50 184.50,1162.50 Z"
+const card2="M 916.50,1230.00 C 916.50,1230.00 922.50,1299.00 922.50,1299.00 922.50,1299.00 1149.00,1369.50 1149.00,1369.50 1149.00,1369.50 1344.00,1167.00 1344.00,1167.00 1344.00,1167.00 1336.50,1092.00 1336.50,1092.00 1336.50,1092.00 1138.50,1044.00 1138.50,1044.00 1138.50,1044.00 916.50,1230.00 916.50,1230.00 Z"
+const passport ="M 1358.67,1300.67 C 1358.67,1300.67 1464.00,1327.50 1464.00,1327.50 1464.00,1327.50 1465.33,1345.33 1465.33,1345.33 1465.33,1345.33 1702.50,1480.50 1702.50,1480.50 1702.50,1480.50 1726.67,1479.33 1726.67,1479.33 1726.67,1479.33 1927.33,1265.33 1927.33,1265.33 1927.33,1265.33 1929.00,1203.00 1929.00,1203.00 1929.00,1203.00 1786.00,1138.00 1786.00,1138.00 1786.00,1138.00 1798.00,1110.00 1798.00,1110.00 1798.00,1110.00 1796.67,1092.67 1796.67,1092.67 1796.67,1092.67 1543.50,1042.50 1543.50,1042.50 1543.50,1042.50 1358.67,1300.67 1358.67,1300.67 Z"
+const box2="M 1928.00,1154.00 C 1928.00,1154.00 1922.00,1326.00 1922.00,1326.00 1922.00,1326.00 2159.00,1535.00 2159.00,1535.00 2159.00,1535.00 2331.00,1537.00 2331.00,1537.00 2331.00,1537.00 2580.00,1386.00 2580.00,1386.00 2580.00,1386.00 2603.00,1207.00 2603.00,1207.00 2603.00,1207.00 2269.00,1006.00 2269.00,1006.00 2269.00,1006.00 1928.00,1154.00 1928.00,1154.00 Z"
+const pen="M 458.33,720.67 C 458.33,720.67 265.00,773.33 261.67,765.67 220.00,731.00 244.00,708.33 245.33,707.67 278.00,686.33 450.00,670.00 450.00,670.00 450.00,670.00 464.33,671.33 464.33,671.33 464.33,671.33 469.33,674.33 470.33,677.33 496.33,667.67 509.00,692.67 475.00,704.00 475.00,704.00 471.67,713.33 471.67,713.33 471.67,713.33 458.33,720.67 458.33,720.67 Z"
+
+const SCENE_OBJECTS = [
+  { 
+    id: "sheet", 
+    label: "صل الصورة بالكلمة", 
+    d: sheet, 
+    type: "sheet",
+    taskComponent: ConnectGame2D 
+  },
+  { 
+    id: "box", 
+    label: "البحث والاستكشاف", 
+    d: box2,
+    type: "box",
+    taskComponent: SafariAdventure 
+  },
+  { 
+    id: "pen", 
+    label: "عالم الحروف ثلاثي الأبعاد", 
+    d: pen,
+    type: "pen",
+    taskComponent: MagicBlocks3D 
+  },
+  { 
+    id: "passport", 
+    label: "فحص الجوازات", 
+    d: passport,
+    type: "passport",
+    taskComponent: PassportScannerGame 
+  },
+  { 
+    id: "card", 
+    label: "ابحث عن الشخص", 
+    d: card2,
+    type: "card",
+    taskComponent: InfiniteCharacterGallery 
+  },
+];
+
 function cn(...inputs) { return twMerge(clsx(inputs)); }
 
 // ==========================================
-// MAIN PAGE COMPONENT (The Switcher)
+// 1. SCENE CONFIGURATION
 // ==========================================
-export default function LearningPlatform() {
-  const [activeTask, setActiveTask] = useState("2d"); // '2d' or '3d'
 
-  return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* Navigation Header */}
-      <nav className="p-4 bg-white shadow-sm flex justify-center gap-4 z-50 relative">
-        <button
-          onClick={() => setActiveTask("2d")}
-          className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all",
-            activeTask === "2d" ? "bg-sky-500 text-white shadow-md" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-          )}
-        >
-          ١. ربط الكلمات (2D)
-        </button>
-        <button
-          onClick={() => setActiveTask("3d")}
-          className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all",
-            activeTask === "3d" ? "bg-purple-600 text-white shadow-md" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-          )}
-        >
-          ٢. عالم الحروف (3D)
-        </button>
-      </nav>
+// // Viewbox must match your SVG coordinate system
+// const VIEWBOX = "0 0 2432 1760";
+const BG_IMAGE = "/yellow_tabel.png"//"/boy_Image9.png"; 
 
-      {/* Content Area */}
-      <div className="w-full h-[calc(100vh-80px)] relative">
-        {activeTask === "2d" ? <ConnectGame2D /> : <MagicBlocks3D />}
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// TASK 1: 2D CONNECTION GAME
-// ==========================================
-const GAME_DATA = [
-  { id: 1, type: "image", content: "🍎", matchId: 1 },
-  { id: 2, type: "image", content: "🚗", matchId: 2 },
-  { id: 3, type: "image", content: "🐈", matchId: 3 },
-  { id: 4, type: "text", content: "تفاحة", matchId: 1 },
-  { id: 5, type: "text", content: "سيارة", matchId: 2 },
-  { id: 6, type: "text", content: "قطة", matchId: 3 },
-];
-
-function ConnectGame2D() {
-  const [leftCol, setLeftCol] = useState([]);
-  const [rightCol, setRightCol] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [connections, setConnections] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const containerRef = useRef(null);
-  const itemRefs = useRef(new Map());
+export default function InteractiveSVGScene() {
+  const [activeTask, setActiveTask] = useState(null); // The object currently being interacted with
+  const [completedIds, setCompletedIds] = useState([]); // List of completed IDs
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-    setLeftCol(GAME_DATA.filter((i) => i.type === "image").sort(() => Math.random() - 0.5));
-    setRightCol(GAME_DATA.filter((i) => i.type === "text").sort(() => Math.random() - 0.5));
-  }, []);
+  useEffect(() => { setIsClient(true); }, []);
 
-  const handleItemClick = (item) => {
-    if (isSubmitted) setIsSubmitted(false);
-    const existingIdx = connections.findIndex(c => c.start.id === item.id || c.end.id === item.id);
-    
-    if (existingIdx !== -1) {
-      const newConns = [...connections];
-      newConns.splice(existingIdx, 1);
-      setConnections(newConns);
-      if (!selectedItem) { setSelectedItem(item); return; }
+  // --- LOGIC: HANDLE COMPLETION ---
+  const handleTaskComplete = () => {
+    if (activeTask && !completedIds.includes(activeTask.id)) {
+      setCompletedIds([...completedIds, activeTask.id]);
     }
-    if (selectedItem?.id === item.id) { setSelectedItem(null); return; }
-    if (!selectedItem) { setSelectedItem(item); return; }
-    if (selectedItem.type === item.type) { setSelectedItem(item); return; }
-
-    setConnections(prev => [...prev, { start: selectedItem, end: item }]);
-    setSelectedItem(null);
+    // Close modal
+    setActiveTask(null);
   };
 
-  const getCoordinates = (itemId) => {
-    const el = itemRefs.current.get(itemId);
-    const container = containerRef.current;
-    if (!el || !container) return { x: 0, y: 0 };
-    const r1 = el.getBoundingClientRect();
-    const r2 = container.getBoundingClientRect();
-    return { x: r1.left - r2.left + r1.width / 2, y: r1.top - r2.top + r1.height / 2 };
-  };
-
-  const allConnected = connections.length === 3;
+  // Calculate Progress
+  const progress = Math.round((completedIds.length / SCENE_OBJECTS.length) * 100);
 
   if (!isClient) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-sky-50">
-      <h2 className="text-2xl font-bold text-sky-800 mb-6">صل الصورة بالكلمة</h2>
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 font-sans">
       
-      <div ref={containerRef} className="relative bg-white rounded-3xl shadow-xl p-8 w-full max-w-3xl flex justify-between h-[450px]">
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
-          <AnimatePresence>
-            {connections.map((conn) => {
-              const start = getCoordinates(conn.start.id);
-              const end = getCoordinates(conn.end.id);
-              const isCorrect = isSubmitted ? conn.start.matchId === conn.end.matchId : true;
-              const color = isSubmitted ? (isCorrect ? "#4ADE80" : "#F87171") : "#60A5FA";
-              
-              return (
-                <motion.line
-                  key={`${conn.start.id}-${conn.end.id}`}
-                  x1={start.x} y1={start.y} x2={end.x} y2={end.y}
-                  stroke={color} strokeWidth="6" strokeLinecap="round"
-                  initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} exit={{ opacity: 0 }}
-                />
-              );
-            })}
-          </AnimatePresence>
+      {/* HEADER HUD */}
+      <div className=" absolute w-full max-w-xl mb-4 flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg text-white z-30 top-5">
+          <p> </p>
+        <div className="flex justify-center items-center flex-col">
+          <h1 className="text-xl font-bold">مكتب تفاعلي</h1>
+          <p className="text-slate-400 text-sm">انقر على الأشياء المتوهجة لإكمال المهام</p>
+        </div>
+        <div className="flex items-center gap-4">
+          
+          {/* Progress Bar */}
+          <div className="w-32 h-3 bg-slate-700 rounded-full overflow-hidden" dir="rtl">
+            <motion.div 
+              className="h-full bg-emerald-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+          <div className="text-right flex gap-5">
+            <div className="text-xl font-bold text-emerald-400">{progress}%</div>
+            <div className="text-xl font-bold text-slate-400 uppercase">التقدم</div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN SCENE CONTAINER */}
+      <div className="relative w-full bg-slate-800 rounded-xl overflow-hidden shadow-2xl border-4 border-slate-700">
+        
+        {/* 1. BACKGROUND IMAGE */}
+        <img src={BG_IMAGE} alt="Scene" className="w-full h-auto block pointer-events-none opacity-80" />
+
+        {/* 2. SVG OVERLAY LAYER */}
+        <svg 
+          viewBox={VIEWBOX} 
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="none"
+        >
+          {SCENE_OBJECTS.map((obj) => {
+            const isCompleted = completedIds.includes(obj.id);
+            
+            return (
+              <motion.path
+                key={obj.id}
+                d={obj.d}
+                onClick={() => setActiveTask(obj)}
+                
+                // Initial State
+                fill="transparent"
+                stroke={isCompleted ? "#10B981" : "transparent"} 
+                strokeWidth="5"
+                
+                // Interaction Styles
+                className={cn(
+                  "transition-all duration-300 cursor-pointer focus:outline-none",
+                  isCompleted ? "cursor-default" : "hover:cursor-pointer"
+                )}
+                
+                // Animations
+                whileHover={!isCompleted ? { 
+                  fill: "rgba(255, 255, 255, 0.15)", 
+                  stroke: "white", 
+                  strokeWidth: 3 
+                } : {}}
+                whileTap={!isCompleted ? { scale: 0.99 } : {}}
+                
+                // Optional: Tooltip logic can be added here
+              />
+            );
+          })}
         </svg>
 
-        <div className="flex flex-col justify-around w-1/3 z-20">
-          {leftCol.map(item => (
-            <GameItem2D key={item.id} item={item} selected={selectedItem} conns={connections} submitted={isSubmitted} onClick={() => handleItemClick(item)} setRef={el => itemRefs.current.set(item.id, el)} />
-          ))}
-        </div>
-        <div className="flex flex-col justify-around w-1/3 z-20">
-          {rightCol.map(item => (
-            <GameItem2D key={item.id} item={item} selected={selectedItem} conns={connections} submitted={isSubmitted} onClick={() => handleItemClick(item)} setRef={el => itemRefs.current.set(item.id, el)} />
-          ))}
-        </div>
-      </div>
+        {/* 3. TASK MODAL */}
+        <AnimatePresence>
+          {activeTask && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                className="bg-white w-full h-full rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              >
+                {/* Modal Header */}
+                <div className="bg-slate-100 p-4 border-b flex justify-between items-center">
+                  <p> </p>
+                  <h2 className="font-bold text-lg text-slate-800 ">{activeTask.label}</h2>
+                  <button onClick={() => setActiveTask(null)} className="w-8 h-8 rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-500 font-bold transition text-gray-400">✕</button>
+                </div>
 
-      <div className="h-16 mt-6">
-        {allConnected && !isSubmitted && (
-          <button onClick={() => setIsSubmitted(true)} className="px-8 py-3 bg-green-500 text-white rounded-full font-bold shadow-lg hover:scale-105 transition">تحقق من الإجابة ✅</button>
-        )}
-        {isSubmitted && (
-          <button onClick={() => window.location.reload()} className="px-8 py-3 bg-sky-500 text-white rounded-full font-bold shadow-lg hover:scale-105 transition">لعبة جديدة 🔄</button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function GameItem2D({ item, selected, conns, submitted, onClick, setRef }) {
-  const isSelected = selected?.id === item.id;
-  const conn = conns.find(c => c.start.id === item.id || c.end.id === item.id);
-  
-  let styles = "bg-gray-50 border-gray-200";
-  if (isSelected) styles = "border-sky-500 bg-sky-50 ring-4 ring-sky-200 scale-105";
-  else if (conn) {
-    if (submitted) {
-      const isCorrect = conn.start.matchId === conn.end.matchId;
-      styles = isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50";
-    } else {
-      styles = "border-sky-300 bg-sky-50";
-    }
-  }
-
-  return (
-    <div ref={setRef} onClick={onClick} className={cn("h-20 w-full rounded-2xl flex items-center justify-center text-3xl cursor-pointer shadow-md border-4 transition-all", styles)}>
-      {item.content}
-    </div>
-  );
-}
-
-
-// ==========================================
-// TASK 2: 3D MAGIC BLOCKS (Fixed)
-// ==========================================
-
-function MagicBlocks3D() {
-  const [hoveredLetter, setHoveredLetter] = useState(null);
-
-  return (
-    <div className="w-full h-full bg-slate-900 relative overflow-hidden">
-      {/* 3D Scene */}
-      <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
-        <color attach="background" args={["#0f172a"]} />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        <ambientLight intensity={0.5} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        
-        <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-          <group position={[0, 0, 0]}>
-            <InteractiveBlock 
-              position={[-2.5, 0, 0]} 
-              color="#F87171" 
-              letter="أ" 
-              label="أرنب (Rabbit)" 
-              onHover={setHoveredLetter} 
-            />
-            <InteractiveBlock 
-              position={[0, 0, 0]} 
-              color="#60A5FA" 
-              letter="ب" 
-              label="بطة (Duck)" 
-              onHover={setHoveredLetter} 
-            />
-            <InteractiveBlock 
-              position={[2.5, 0, 0]} 
-              color="#34D399" 
-              letter="ت" 
-              label="تفاحة (Apple)" 
-              onHover={setHoveredLetter} 
-            />
-          </group>
-        </Float>
-
-        <OrbitControls enableZoom={false} enablePan={false} />
-      </Canvas>
-
-      {/* 2D Overlay */}
-      <div className="absolute top-8 left-0 right-0 text-center pointer-events-none">
-        <h2 className="text-3xl font-bold text-white drop-shadow-lg mb-2">عالم الحروف ثلاثي الأبعاد</h2>
-        <p className="text-slate-300 text-lg">حرك المكعبات بالفأرة واضغط عليها</p>
-      </div>
-
-      {/* Interaction Feedback */}
-      <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none h-16">
-        <AnimatePresence mode="wait">
-          {hoveredLetter && (
-            <motion.div
-              key={hoveredLetter}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="inline-block bg-white/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20"
-            >
-              <span className="text-4xl font-bold text-white">{hoveredLetter}</span>
-            </motion.div>
+                {/* Game Content */}
+                <div className="flex-1 p-6 overflow-y-auto bg-slate-50">
+                   <activeTask.taskComponent onComplete={handleTaskComplete} />
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
+
       </div>
     </div>
   );
 }
 
-// Fixed 3D Block Component
-function InteractiveBlock({ position, color, letter, label, onHover }) {
-  const meshRef = useRef();
-  const [hovered, setHover] = useState(false);
-  const [active, setActive] = useState(false);
+// ==========================================
+// MOCK TASK COMPONENTS
+// (Replace these with your full games from previous demos)
+// ==========================================
 
-  useFrame((state, delta) => {
-    if (!meshRef.current) return;
-    
-    // Basic idle rotation
-    if (!active && !hovered) {
-      meshRef.current.rotation.x += delta * 0.2;
-      meshRef.current.rotation.y += delta * 0.3;
-    }
-    // Fast spin on click
-    if (active) {
-       meshRef.current.rotation.y += delta * 10;
-    }
-  });
-
-  const handleClick = () => {
-    setActive(true);
-    setTimeout(() => setActive(false), 500);
-  };
-
+function MiniMatchingGame({ onComplete }) {
+  const [matched, setMatched] = useState(false);
   return (
-    <group position={position}>
-      <RoundedBox
-        ref={meshRef}
-        args={[1.5, 1.5, 1.5]} 
-        radius={0.1}           
-        smoothness={4}         
-        onClick={handleClick}
-        onPointerOver={() => { setHover(true); onHover(label); }}
-        onPointerOut={() => { setHover(false); onHover(null); }}
-        scale={hovered ? 1.2 : 1}
-      >
-        <meshStandardMaterial 
-          color={color} 
-          roughness={0.1} 
-          metalness={0.1}
-          transparent
-          opacity={0.9}
-        />
-        
-        <Text
-          position={[0, 0, 0.8]} 
-          fontSize={1}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {letter}
-        </Text>
-        
-        {/* Back face text for 3D effect */}
-        <Text
-          position={[0, 0, -0.8]}
-          rotation={[0, Math.PI, 0]}
-          fontSize={1}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {letter}
-        </Text>
-      </RoundedBox>
+    <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+      <div className="text-4xl">📧 ↔️ 📩</div>
+      <h3 className="text-2xl font-bold text-slate-800">Check Your Emails</h3>
+      <p className="text-slate-600">Connect the sender to the correct subject line.</p>
       
-      {hovered && (
-        <pointLight distance={3} intensity={2} color={color} />
+      {!matched ? (
+        <button 
+          onClick={() => setMatched(true)}
+          className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+        >
+          Simulate Game Win
+        </button>
+      ) : (
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="text-green-500 text-5xl font-bold">Excellent!</div>
+          <button onClick={onComplete} className="px-6 py-3 bg-green-500 text-white rounded-lg font-bold shadow-lg animate-bounce">
+            Close & Mark Done
+          </button>
+        </motion.div>
       )}
-    </group>
+    </div>
+  );
+}
+
+function MiniQuizGame({ onComplete }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+      <div className="text-4xl">☕️</div>
+      <h3 className="text-2xl font-bold text-slate-800">Morning Coffee Quiz</h3>
+      <p className="text-slate-600">What is the Arabic word for "Morning"?</p>
+      <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+        <button className="p-4 bg-white border-2 border-slate-200 rounded-xl hover:bg-red-50">Layl (Night)</button>
+        <button onClick={onComplete} className="p-4 bg-white border-2 border-slate-200 rounded-xl hover:bg-green-100 hover:border-green-500">Sabah (Morning)</button>
+      </div>
+    </div>
+  );
+}
+
+function MiniReadingTask({ onComplete }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+      <div className="text-4xl">📒</div>
+      <h3 className="text-2xl font-bold text-slate-800">Review Notes</h3>
+      <p className="text-slate-600">Read the vocabulary list to complete this task.</p>
+      <div className="bg-yellow-50 p-6 rounded-lg shadow-sm border border-yellow-200 w-full max-w-sm text-right font-bold text-slate-700">
+        1. كتاب (Book)<br/>
+        2. قلم (Pen)<br/>
+        3. مكتب (Desk)
+      </div>
+      <button onClick={onComplete} className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+        I have read it
+      </button>
+    </div>
   );
 }
