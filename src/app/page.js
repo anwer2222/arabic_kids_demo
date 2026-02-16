@@ -45,6 +45,13 @@ const SCENE_OBJECTS = [
     taskComponent: JungleNeonNight//SafariAdventure 
   },
   { 
+    id: "box2", 
+    label: "البحث في سفاري", 
+    d: box2,
+    type: "box2",
+    taskComponent: SafariAdventure//SafariAdventure 
+  },
+  { 
     id: "pen", 
     label: "عالم الحروف ثلاثي الأبعاد", 
     d: pen,
