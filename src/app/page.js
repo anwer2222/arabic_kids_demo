@@ -8,6 +8,7 @@ import {ConnectGame2D, MagicBlocks3D} from "../components/connect"
 import InfiniteCharacterGallery from "../components/charcter"
 import SafariAdventure from "../components/animal"
 import PassportScannerGame from "../components/passport"
+import JungleNeonNight from "../components/jungle"
 
 // ==========================================
 // CONFIGURATION
@@ -41,7 +42,7 @@ const SCENE_OBJECTS = [
     label: "البحث والاستكشاف", 
     d: box2,
     type: "box",
-    taskComponent: SafariAdventure 
+    taskComponent: JungleNeonNight//SafariAdventure 
   },
   { 
     id: "pen", 
